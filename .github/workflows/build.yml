@@ -1,0 +1,32 @@
+name: Build ImmortalWrt for Xiaomi AX3000T
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive  # 确保拉取所有子模块
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential libncurses5-dev zlib1g-dev gawk git gettext libssl-dev
+
+    - name: Setup build configuration
+      run: |
+        cd immortalwrt
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+        make menuconfig  # 需通过脚本或预设文件自动配置（见下文说明）
+
+    - name: Compile firmware
+      run: |
+        cd immortalwrt
+        make -j$(nproc) V=s
